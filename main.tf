@@ -86,6 +86,12 @@ resource "aws_security_group" "vipul_node_sg" {
   }
 }
 
+# 1. Add missing VPC policy for cluster role
+resource "aws_iam_role_policy_attachment" "vipul_cluster_vpc_policy" {
+  role       = aws_iam_role.vipul_cluster_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSVPCResourceController"
+}
+
 resource "aws_eks_cluster" "vipul" {
   name     = "vipul-cluster"
   role_arn = aws_iam_role.vipul_cluster_role.arn
@@ -94,6 +100,11 @@ resource "aws_eks_cluster" "vipul" {
     subnet_ids         = aws_subnet.vipul_subnet[*].id
     security_group_ids = [aws_security_group.vipul_cluster_sg.id]
   }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.vipul_cluster_role_policy,
+    aws_iam_role_policy_attachment.vipul_cluster_vpc_policy,
+  ]
 }
 
 resource "aws_eks_node_group" "vipul" {
